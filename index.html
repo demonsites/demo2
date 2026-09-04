@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NEXUS — Eletrônicos Premium</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { neon: '#22d3ee' },
+        fontFamily: { display: ['Inter', 'system-ui', 'sans-serif'] },
+        boxShadow: {
+          'neon': '0 0 20px rgba(34, 211, 238, 0.35)',
+          'neon-sm': '0 0 10px rgba(34, 211, 238, 0.25)',
+        },
+        animation: {
+          'fade-in': 'fadeIn 0.6s ease-out',
+          'slide-up': 'slideUp 0.5s ease-out',
+          'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
+        },
+        keyframes: {
+          fadeIn: { '0%': { opacity: 0 }, '100%': { opacity: 1 } },
+          slideUp: { '0%': { opacity: 0, transform: 'translateY(20px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          pulseNeon: { '0%, 100%': { boxShadow: '0 0 10px rgba(34, 211, 238, 0.3)' }, '50%': { boxShadow: '0 0 25px rgba(34, 211, 238, 0.6)' } },
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body {
+    background: #020617;
+    color: #e2e8f0;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  body.modal-open { overflow: hidden; }
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+
+  .card-glow:hover { box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.3), 0 0 30px rgba(34, 211, 238, 0.15); }
+  .slide { transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out; }
+  .slide.active { opacity: 1; transform: scale(1); }
+  .slide.inactive { opacity: 0; transform: scale(1.03); }
+  .input-glow:focus { box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.25); }
+
+  .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
+  .toast-exit { animation: slideOutRight 0.3s ease-in forwards; }
+  @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+
+  .dropdown-panel { transform-origin: top right; transition: all 0.2s ease-out; }
+  .dropdown-panel.hidden { opacity: 0; transform: scale(0.95) translateY(-4px); pointer-events: none; }
+
+  /* Modal */
+  .modal-backdrop {
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+    pointer-events: none;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+  .modal-panel {
+    transform: translateY(20px) scale(0.97);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-backdrop.open .modal-panel { transform: translateY(0) scale(1); opacity: 1; }
+  .modal-content::-webkit-scrollbar { width: 8px; }
+  .modal-content::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+  /* FAQ accordion */
+  .faq-item[open] summary .faq-icon { transform: rotate(45deg); }
+  .faq-icon { transition: transform 0.25s ease; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary { list-style: none; cursor: pointer; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ================= HEADER ================= -->
+<header id="header" class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-950/70 border-b border-slate-800/60">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 lg:h-20 gap-4">
+      <a href="#" class="flex items-center gap-2 shrink-0">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-neon-sm">
+          <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white">NEXUS<span class="text-cyan-400">.</span></span>
+      </a>
+
+      <div class="hidden md:flex flex-1 max-w-xl mx-4">
+        <div class="relative w-full group">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-cyan-400 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input type="text" placeholder="Buscar produtos, marcas, categorias..." class="w-full bg-slate-900/80 border border-slate-800 text-slate-200 placeholder-slate-500 rounded-full pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-cyan-400/50 input-glow transition-all"/>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button class="md:hidden p-2 text-slate-300 hover:text-cyan-400 transition-colors" aria-label="Buscar">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <button class="hidden sm:flex p-2 text-slate-300 hover:text-cyan-400 transition-colors" aria-label="Favoritos">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button id="cartBtn" class="relative p-2 text-slate-300 hover:text-cyan-400 transition-colors" aria-label="Carrinho">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span id="cartCount" class="absolute -top-0.5 -right-0.5 bg-cyan-400 text-slate-950 text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-neon-sm">0</span>
+        </button>
+        <div class="relative">
+          <button id="menuBtn" class="p-2 text-slate-300 hover:text-cyan-400 transition-colors" aria-label="Menu">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div id="menuPanel" class="dropdown-panel hidden absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Minha Conta
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Meus Pedidos
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Lista de Desejos
+            </a>
+            <div class="border-t border-slate-800"></div>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 text-sm text-cyan-400 hover:bg-slate-800 transition-colors">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Entrar / Cadastrar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HERO BANNER ================= -->
+<section class="relative pt-16 lg:pt-20 overflow-hidden bg-grid">
+  <div class="absolute top-1/3 -left-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-0 -right-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+    <div id="heroCarousel" class="relative h-[420px] sm:h-[480px] lg:h-[520px] rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/50">
+      <div class="slide active absolute inset-0 flex flex-col lg:flex-row items-center justify-between p-6 sm:p-10 lg:p-16 gap-8">
+        <div class="flex-1 text-center lg:text-left z-10">
+          <span class="inline-block px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-4">★ Produto do Mês</span>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">Headphone <span class="text-cyan-400">Aurora X9</span></h2>
+          <p class="text-slate-400 text-base sm:text-lg max-w-md mx-auto lg:mx-0 mb-6">Som espacial 360°, cancelamento de ruído adaptativo e 60h de bateria.</p>
+          <div class="flex items-center gap-4 justify-center lg:justify-start mb-8">
+            <span class="text-3xl lg:text-4xl font-bold text-white">R$ 2.499</span>
+            <span class="text-slate-500 line-through text-lg">R$ 3.199</span>
+            <span class="px-2 py-1 bg-cyan-400/10 text-cyan-400 text-xs font-bold rounded">-22%</span>
+          </div>
+          <button class="group inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-8 py-3.5 rounded-full shadow-neon transition-all hover:scale-105">
+            Comprar Agora
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+        <div class="flex-1 relative w-full max-w-md lg:max-w-lg">
+          <div class="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl"></div>
+          <img src="https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop" alt="Headphone" class="relative w-full h-full object-contain drop-shadow-2xl" onerror="this.src='https://via.placeholder.com/600x600/0f172a/22d3ee?text=Headphone'"/>
+        </div>
+      </div>
+      <div class="slide inactive absolute inset-0 flex flex-col lg:flex-row items-center justify-between p-6 sm:p-10 lg:p-16 gap-8">
+        <div class="flex-1 text-center lg:text-left z-10">
+          <span class="inline-block px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-4">⚡ Lançamento</span>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">Smartwatch <span class="text-cyan-400">Pulse Pro</span></h2>
+          <p class="text-slate-400 text-base sm:text-lg max-w-md mx-auto lg:mx-0 mb-6">Monitoramento avançado de saúde, tela AMOLED always-on e GPS de precisão dupla.</p>
+          <div class="flex items-center gap-4 justify-center lg:justify-start mb-8">
+            <span class="text-3xl lg:text-4xl font-bold text-white">R$ 1.899</span>
+            <span class="text-slate-500 line-through text-lg">R$ 2.299</span>
+            <span class="px-2 py-1 bg-cyan-400/10 text-cyan-400 text-xs font-bold rounded">-17%</span>
+          </div>
+          <button class="group inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-8 py-3.5 rounded-full shadow-neon transition-all hover:scale-105">
+            Comprar Agora
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+        <div class="flex-1 relative w-full max-w-md lg:max-w-lg">
+          <div class="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl"></div>
+          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop" alt="Smartwatch" class="relative w-full h-full object-contain drop-shadow-2xl" onerror="this.src='https://via.placeholder.com/600x600/0f172a/22d3ee?text=Smartwatch'"/>
+        </div>
+      </div>
+      <div class="slide inactive absolute inset-0 flex flex-col lg:flex-row items-center justify-between p-6 sm:p-10 lg:p-16 gap-8">
+        <div class="flex-1 text-center lg:text-left z-10">
+          <span class="inline-block px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-4">🔥 Oferta Limitada</span>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">Câmera <span class="text-cyan-400">Vision 4K</span></h2>
+          <p class="text-slate-400 text-base sm:text-lg max-w-md mx-auto lg:mx-0 mb-6">Sensor full-frame, estabilização de 5 eixos e gravação em 8K.</p>
+          <div class="flex items-center gap-4 justify-center lg:justify-start mb-8">
+            <span class="text-3xl lg:text-4xl font-bold text-white">R$ 8.999</span>
+            <span class="text-slate-500 line-through text-lg">R$ 10.499</span>
+            <span class="px-2 py-1 bg-cyan-400/10 text-cyan-400 text-xs font-bold rounded">-14%</span>
+          </div>
+          <button class="group inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-8 py-3.5 rounded-full shadow-neon transition-all hover:scale-105">
+            Comprar Agora
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+        <div class="flex-1 relative w-full max-w-md lg:max-w-lg">
+          <div class="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl"></div>
+          <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&auto=format&fit=crop" alt="Camera" class="relative w-full h-full object-contain drop-shadow-2xl" onerror="this.src='https://via.placeholder.com/600x600/0f172a/22d3ee?text=Camera'"/>
+        </div>
+      </div>
+
+      <button id="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700 hover:border-cyan-400 hover:text-cyan-400 text-white flex items-center justify-center transition-all z-20">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button id="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700 hover:border-cyan-400 hover:text-cyan-400 text-white flex items-center justify-center transition-all z-20">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <button class="dot w-8 h-1 rounded-full bg-cyan-400 transition-all" data-slide="0"></button>
+        <button class="dot w-8 h-1 rounded-full bg-slate-700 hover:bg-slate-600 transition-all" data-slide="1"></button>
+        <button class="dot w-8 h-1 rounded-full bg-slate-700 hover:bg-slate-600 transition-all" data-slide="2"></button>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3">
+        <svg class="w-5 h-5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span class="text-xs sm:text-sm text-slate-300"><strong class="text-white">Frete Grátis</strong> acima de R$ 299</span>
+      </div>
+      <div class="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3">
+        <svg class="w-5 h-5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="text-xs sm:text-sm text-slate-300"><strong class="text-white">Garantia</strong> de 24 meses</span>
+      </div>
+      <div class="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3">
+        <svg class="w-5 h-5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span class="text-xs sm:text-sm text-slate-300"><strong class="text-white">12x sem juros</strong> no cartão</span>
+      </div>
+      <div class="flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3">
+        <svg class="w-5 h-5 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span class="text-xs sm:text-sm text-slate-300"><strong class="text-white">Troca Grátis</strong> em 30 dias</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRODUCTS GRID ================= -->
+<section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <div class="flex items-end justify-between mb-8">
+    <div>
+      <span class="text-cyan-400 text-xs font-semibold tracking-widest uppercase">// Destaques</span>
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mt-2">Mais Vendidos</h2>
+      <p class="text-slate-400 mt-2 text-sm sm:text-base">Selecionados a dedo para quem busca o melhor em tecnologia.</p>
+    </div>
+    <a href="#" class="hidden sm:inline-flex items-center gap-1 text-sm text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+      Ver todos
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+  </div>
+  <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="relative border-t border-slate-800 bg-slate-950 mt-16">
+  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div class="lg:col-span-1">
+        <a href="#" class="flex items-center gap-2 mb-4">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
+            <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </div>
+          <span class="text-xl font-bold text-white">NEXUS<span class="text-cyan-400">.</span></span>
+        </a>
+        <p class="text-sm text-slate-400 leading-relaxed mb-5">Eletrônicos premium para quem exige o melhor. Tecnologia, design e performance em um só lugar.</p>
+        <div class="flex gap-3">
+          <a href="#" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 hover:border-cyan-400 hover:text-cyan-400 text-slate-400 flex items-center justify-center transition-all" aria-label="Instagram"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8A4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 hover:border-cyan-400 hover:text-cyan-400 text-slate-400 flex items-center justify-center transition-all" aria-label="Twitter"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22 4.01c-1 .49-1.98.689-3 .99-1.121-1.265-2.783-1.335-4.38-.737S11.977 6.323 12 8v1c-3.245.083-6.135-1.395-8-4 0 0-4.182 7.433 4 11-1.872 1.247-3.739 2.088-6 2 3.308 1.803 6.913 2.423 10.034 1.517 3.58-1.04 6.522-3.723 7.651-7.742a13.84 13.84 0 0 0 .497-3.753c0-.249 1.51-2.772 1.818-4.013z"/></svg></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 hover:border-cyan-400 hover:text-cyan-400 text-slate-400 flex items-center justify-center transition-all" aria-label="YouTube"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="text-white font-semibold mb-4 text-sm tracking-wider uppercase">Institucional</h3>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="#" data-page="sobre" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Sobre a Nexus</a></li>
+          <li><a href="#" data-page="lojas" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Nossas Lojas</a></li>
+          <li><a href="#" data-page="carreiras" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Trabalhe Conosco</a></li>
+          <li><a href="#" data-page="sustentabilidade" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Sustentabilidade</a></li>
+          <li><a href="#" data-page="imprensa" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Imprensa</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-white font-semibold mb-4 text-sm tracking-wider uppercase">Ajuda</h3>
+        <ul class="space-y-2.5 text-sm">
+          <li><a href="#" data-page="atendimento" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Central de Atendimento</a></li>
+          <li><a href="#" data-page="trocas" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Trocas e Devoluções</a></li>
+          <li><a href="#" data-page="prazo" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Prazo de Entrega</a></li>
+          <li><a href="#" data-page="pagamento" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Formas de Pagamento</a></li>
+          <li><a href="#" data-page="privacidade" class="page-link text-slate-400 hover:text-cyan-400 transition-colors">Política de Privacidade</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-white font-semibold mb-4 text-sm tracking-wider uppercase">Newsletter</h3>
+        <p class="text-sm text-slate-400 mb-4">Receba ofertas exclusivas e novidades em primeira mão.</p>
+        <form id="newsletterForm" class="space-y-3">
+          <input type="email" required placeholder="seu@email.com" class="w-full bg-slate-900 border border-slate-800 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-400/50 input-glow transition-all"/>
+          <button type="submit" class="w-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold py-2.5 rounded-lg transition-all hover:shadow-neon-sm text-sm">Inscrever-se</button>
+          <p class="text-xs text-slate-500">Sem spam. Cancele quando quiser.</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p class="text-xs text-slate-500">© 2025 Nexus Eletrônicos. Todos os direitos reservados. CNPJ 00.000.000/0001-00</p>
+      <div class="flex items-center gap-2 text-xs text-slate-500">
+        <span>Bandeiras:</span>
+        <span class="px-2 py-1 bg-slate-900 border border-slate-800 rounded">VISA</span>
+        <span class="px-2 py-1 bg-slate-900 border border-slate-800 rounded">MASTER</span>
+        <span class="px-2 py-1 bg-slate-900 border border-slate-800 rounded">PIX</span>
+        <span class="px-2 py-1 bg-slate-900 border border-slate-800 rounded">BOLETO</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= MODAL ================= -->
+<div id="pageModal" class="modal-backdrop fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+  <div class="modal-panel relative w-full max-w-3xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
+      <div class="flex items-center gap-3">
+        <div id="modalIcon" class="w-10 h-10 rounded-lg bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400"></div>
+        <h3 id="modalTitle" class="text-lg font-bold text-white"></h3>
+      </div>
+      <button id="modalClose" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-cyan-400 text-slate-400 flex items-center justify-center transition-all" aria-label="Fechar">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Content -->
+    <div id="modalBody" class="modal-content flex-1 overflow-y-auto px-6 py-6 text-slate-300 text-sm leading-relaxed"></div>
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between">
+      <p class="text-xs text-slate-500">Atualizado em Janeiro/2025</p>
+      <button onclick="closeModal()" class="text-sm text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div id="toastContainer" class="fixed top-24 right-4 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+<script>
+  // ====== DADOS DOS PRODUTOS ======
+  const products = [
+    { id: 1, title: 'Fone Bluetooth Quantum', price: 899, oldPrice: 1199, rating: 4.8, reviews: 342, img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop', tag: 'Novo' },
+    { id: 2, title: 'Smartphone Orbit 15 Pro', price: 6499, oldPrice: 7299, rating: 4.9, reviews: 1204, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop', tag: '-11%' },
+    { id: 3, title: 'Notebook Helix Ultra 14"', price: 9899, oldPrice: 11499, rating: 4.7, reviews: 189, img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&auto=format&fit=crop', tag: 'Top' },
+    { id: 4, title: 'Tablet Canvas Air', price: 3299, oldPrice: 3799, rating: 4.6, reviews: 521, img: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&auto=format&fit=crop', tag: '-13%' },
+    { id: 5, title: 'Câmera Vision 4K', price: 8999, oldPrice: 10499, rating: 4.9, reviews: 98, img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&auto=format&fit=crop', tag: 'Pro' },
+    { id: 6, title: 'Smartwatch Pulse Pro', price: 1899, oldPrice: 2299, rating: 4.8, reviews: 756, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop', tag: 'Novo' },
+    { id: 7, title: 'Caixa de Som Bass X', price: 699, oldPrice: 899, rating: 4.5, reviews: 1023, img: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&auto=format&fit=crop', tag: '-22%' },
+    ];
+
+  // ====== CONTEÚDO DAS PÁGINAS ======
+  const pages = {
+    sobre: {
+      title: 'Sobre a Nexus',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+      body: `
+        <p class="mb-4">A <strong class="text-white">Nexus</strong> nasceu em 2015 com uma missão clara: democratizar o acesso à tecnologia premium no Brasil. O que começou como uma pequena loja especializada em áudio de alta fidelidade, hoje é referência nacional em eletrônicos de ponta.</p>
+        <div class="grid grid-cols-3 gap-4 my-6">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-cyan-400">10+</div>
+            <div class="text-xs text-slate-400 mt-1">Anos de mercado</div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-cyan-400">500k+</div>
+            <div class="text-xs text-slate-400 mt-1">Clientes satisfeitos</div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-cyan-400">4.9★</div>
+            <div class="text-xs text-slate-400 mt-1">Avaliação média</div>
+          </div>
+        </div>
+        <h4 class="text-white font-semibold mb-2">Nossa Visão</h4>
+        <p class="mb-4">Acreditamos que tecnologia de qualidade não é luxo — é direito. Por isso trabalhamos diretamente com fabricantes globais para oferecer produtos autênticos, com garantia estendida e preços justos.</p>
+        <h4 class="text-white font-semibold mb-2">Nossos Valores</h4>
+        <ul class="space-y-2 mb-4">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Transparência:</strong> sem letras miúdas, sem pegadinhas.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Qualidade:</strong> curadoria rigorosa de cada produto.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Atendimento humano:</strong> suporte real, 7 dias por semana.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Inovação:</strong> sempre à frente das tendências.</span></li>
+        </ul>
+      `
+    },
+    lojas: {
+      title: 'Nossas Lojas',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+      body: `
+        <p class="mb-5">Visite nossas lojas físicas e experimente nossos produtos antes de comprar. Todas contam com especialistas prontos para te atender.</p>
+        <div class="space-y-3">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="text-white font-semibold">Nexus Flagship — São Paulo</h4>
+                <p class="text-xs text-slate-400 mt-1">Av. Paulista, 1578 — Bela Vista</p>
+                <p class="text-xs text-slate-500 mt-1">Seg-Sáb: 10h às 22h | Dom: 12h às 20h</p>
+              </div>
+              <span class="px-2 py-1 bg-cyan-400/10 text-cyan-400 text-[10px] font-bold rounded">Flagship</span>
+            </div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="text-white font-semibold">Nexus Rio — Shopping Leblon</h4>
+                <p class="text-xs text-slate-400 mt-1">Av. Afrânio de Melo Franco, 290 — Leblon</p>
+                <p class="text-xs text-slate-500 mt-1">Todos os dias: 12h às 22h</p>
+              </div>
+              <span class="px-2 py-1 bg-slate-800 text-slate-300 text-[10px] font-bold rounded">Loja</span>
+            </div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="text-white font-semibold">Nexus BH — Shopping Diamond Mall</h4>
+                <p class="text-xs text-slate-400 mt-1">Av. Olegário Maciel, 1742 — Lourdes</p>
+                <p class="text-xs text-slate-500 mt-1">Seg-Sáb: 10h às 22h | Dom: 14h às 20h</p>
+              </div>
+              <span class="px-2 py-1 bg-slate-800 text-slate-300 text-[10px] font-bold rounded">Loja</span>
+            </div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h4 class="text-white font-semibold">Nexus Curitiba — Shopping Pátio Batel</h4>
+                <p class="text-xs text-slate-400 mt-1">Av. do Batel, 1868 — Batel</p>
+                <p class="text-xs text-slate-500 mt-1">Seg-Sáb: 10h às 22h | Dom: 14h às 20h</p>
+              </div>
+              <span class="px-2 py-1 bg-slate-800 text-slate-300 text-[10px] font-bold rounded">Loja</span>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-5 italic">* Horários podem variar em feriados. Consulte a loja mais próxima.</p>
+      `
+    },
+    carreiras: {
+      title: 'Trabalhe Conosco',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+      body: `
+        <p class="mb-5">Na Nexus, acreditamos que grandes produtos nascem de grandes pessoas. Estamos sempre em busca de talentos apaixonados por tecnologia e inovação.</p>
+        <div class="bg-gradient-to-br from-cyan-400/10 to-blue-600/5 border border-cyan-400/20 rounded-xl p-5 mb-6">
+          <h4 class="text-white font-semibold mb-2">🎯 Por que trabalhar na Nexus?</h4>
+          <ul class="space-y-1.5 text-sm">
+            <li class="flex items-start gap-2"><span class="text-cyan-400">✓</span> Salário competitivo + PLR</li>
+            <li class="flex items-start gap-2"><span class="text-cyan-400">✓</span> Modelo híbrido (3 dias presenciais)</li>
+            <li class="flex items-start gap-2"><span class="text-cyan-400">✓</span> Desconto de até 40% em produtos</li>
+            <li class="flex items-start gap-2"><span class="text-cyan-400">✓</span> Gympass, auxílio home office e educação</li>
+            <li class="flex items-start gap-2"><span class="text-cyan-400">✓</span> Ambiente diverso e inclusivo</li>
+          </ul>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Vagas em destaque</h4>
+        <div class="space-y-2 mb-5">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <h5 class="text-white font-medium text-sm">Desenvolvedor(a) Front-end Sênior</h5>
+              <p class="text-xs text-slate-400 mt-0.5">São Paulo · Híbrido · CLT</p>
+            </div>
+            <span class="text-xs text-cyan-400 font-semibold">Candidatar →</span>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <h5 class="text-white font-medium text-sm">Analista de E-commerce Pleno</h5>
+              <p class="text-xs text-slate-400 mt-0.5">Remoto · CLT</p>
+            </div>
+            <span class="text-xs text-cyan-400 font-semibold">Candidatar →</span>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-lg p-4 flex items-center justify-between">
+            <div>
+              <h5 class="text-white font-medium text-sm">Atendente de Loja — Flagship SP</h5>
+              <p class="text-xs text-slate-400 mt-0.5">São Paulo · Presencial · CLT</p>
+            </div>
+            <span class="text-xs text-cyan-400 font-semibold">Candidatar →</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500">Não encontrou sua vaga? Envie seu currículo para <span class="text-cyan-400">carreiras@nexus.com.br</span></p>
+      `
+    },
+    sustentabilidade: {
+      title: 'Sustentabilidade',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+      body: `
+        <p class="mb-4">Tecnologia e responsabilidade ambiental caminham juntas. Na Nexus, nosso compromisso com o planeta é tão importante quanto a qualidade dos nossos produtos.</p>
+        <h4 class="text-white font-semibold mb-2 mt-5">🌱 Programa Nexus Verde</h4>
+        <ul class="space-y-2 mb-5">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Reciclagem de eletrônicos:</strong> pontos de coleta em todas as lojas físicas.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Embalagens sustentáveis:</strong> 100% recicláveis e com redução de 40% no plástico.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Logística verde:</strong> frota própria com veículos elétricos em capitais.</span></li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> <span><strong class="text-white">Compensação de carbono:</strong> plantamos 1 árvore a cada 10 pedidos.</span></li>
+        </ul>
+        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 my-5">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="text-3xl">🌳</div>
+            <div>
+              <div class="text-2xl font-bold text-cyan-400">12.847</div>
+              <div class="text-xs text-slate-400">Árvores plantadas desde 2020</div>
+            </div>
+          </div>
+        </div>
+        <h4 class="text-white font-semibold mb-2">Certificações</h4>
+        <p class="mb-4">Somos certificados pelo <strong class="text-white">B-Corp</strong> e seguimos os padrões ISO 14001 de gestão ambiental.</p>
+      `
+    },
+    imprensa: {
+      title: 'Imprensa',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/></svg>',
+      body: `
+        <p class="mb-5">Seja bem-vindo à central de imprensa da Nexus. Aqui você encontra releases, imagens em alta resolução e informações para jornalistas.</p>
+        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-5 mb-5">
+          <h4 class="text-white font-semibold mb-3">📰 Últimos releases</h4>
+          <ul class="space-y-3">
+            <li class="border-b border-slate-800 pb-3">
+              <p class="text-xs text-cyan-400 font-semibold">15/01/2025</p>
+              <h5 class="text-white font-medium text-sm mt-1">Nexus anuncia expansão para o Nordeste com 3 novas lojas</h5>
+            </li>
+            <li class="border-b border-slate-800 pb-3">
+              <p class="text-xs text-cyan-400 font-semibold">08/01/2025</p>
+              <h5 class="text-white font-medium text-sm mt-1">Parceria com fabricantes globais reduz preços em até 25%</h5>
+            </li>
+            <li>
+              <p class="text-xs text-cyan-400 font-semibold">20/12/2024</p>
+              <h5 class="text-white font-medium text-sm mt-1">Nexus atinge marca de 500 mil clientes ativos</h5>
+            </li>
+          </ul>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Kit imprensa</h4>
+        <p class="mb-4">Baixe nossa marca, logotipos, fotos oficiais e materiais de apoio:</p>
+        <button class="bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm transition-all">
+          ⬇ Baixar Kit Imprensa (ZIP · 48MB)
+        </button>
+        <div class="mt-6 p-4 bg-slate-950/50 border border-slate-800 rounded-xl">
+          <h4 class="text-white font-semibold mb-2">Contato de imprensa</h4>
+          <p class="text-sm"><strong class="text-white">Ana Beatriz Lima</strong> — Assessoria de Imprensa</p>
+          <p class="text-sm text-slate-400">imprensa@nexus.com.br · (11) 4000-1234</p>
+          <p class="text-xs text-slate-500 mt-2">Resposta em até 24h úteis</p>
+        </div>
+      `
+    },
+    atendimento: {
+      title: 'Central de Atendimento',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      body: `
+        <p class="mb-5">Estamos aqui para ajudar. Escolha o canal mais conveniente para você:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-cyan-400/10 flex items-center justify-center text-cyan-400">💬</div>
+              <div>
+                <h4 class="text-white font-semibold text-sm">Chat Online</h4>
+                <p class="text-xs text-slate-400">24h · Resposta em 2min</p>
+              </div>
+            </div>
+            <button class="w-full mt-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold py-2 rounded-lg text-xs transition-all">Iniciar conversa</button>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-cyan-400/10 flex items-center justify-center text-cyan-400">📞</div>
+              <div>
+                <h4 class="text-white font-semibold text-sm">Telefone</h4>
+                <p class="text-xs text-slate-400">Seg-Dom · 8h às 22h</p>
+              </div>
+            </div>
+            <p class="text-sm text-cyan-400 font-semibold mt-2">0800 123 4567</p>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-cyan-400/10 flex items-center justify-center text-cyan-400">✉️</div>
+              <div>
+                <h4 class="text-white font-semibold text-sm">E-mail</h4>
+                <p class="text-xs text-slate-400">Resposta em até 24h</p>
+              </div>
+            </div>
+            <p class="text-sm text-cyan-400 font-semibold mt-2">contato@nexus.com.br</p>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 hover:border-cyan-400/50 transition-colors">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-10 h-10 rounded-lg bg-cyan-400/10 flex items-center justify-center text-cyan-400">📱</div>
+              <div>
+                <h4 class="text-white font-semibold text-sm">WhatsApp</h4>
+                <p class="text-xs text-slate-400">Seg-Sáb · 9h às 20h</p>
+              </div>
+            </div>
+            <p class="text-sm text-cyan-400 font-semibold mt-2">(11) 99999-0000</p>
+          </div>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Perguntas frequentes</h4>
+        <div class="space-y-2">
+          <details class="faq-item bg-slate-950/50 border border-slate-800 rounded-lg">
+            <summary class="flex items-center justify-between p-4 text-sm text-white font-medium">
+              <span>Como rastreio meu pedido?</span>
+              <svg class="faq-icon w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </summary>
+            <div class="px-4 pb-4 text-slate-400 text-sm">Acesse "Meus Pedidos" na sua conta ou use o código de rastreio enviado por e-mail no site dos Correios/transportadora.</div>
+          </details>
+          <details class="faq-item bg-slate-950/50 border border-slate-800 rounded-lg">
+            <summary class="flex items-center justify-between p-4 text-sm text-white font-medium">
+              <span>Posso alterar meu pedido após a compra?</span>
+              <svg class="faq-icon w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </summary>
+            <div class="px-4 pb-4 text-slate-400 text-sm">Alterações só são possíveis nos primeiros 30 minutos após a compra. Depois, entre em contato para cancelar e refazer.</div>
+          </details>
+          <details class="faq-item bg-slate-950/50 border border-slate-800 rounded-lg">
+            <summary class="flex items-center justify-between p-4 text-sm text-white font-medium">
+              <span>Os produtos têm garantia?</span>
+              <svg class="faq-icon w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </summary>
+            <div class="px-4 pb-4 text-slate-400 text-sm">Sim! Todos os produtos têm garantia mínima de 12 meses, muitos com 24 meses. Confira na página do produto.</div>
+          </details>
+        </div>
+      `
+    },
+    trocas: {
+      title: 'Trocas e Devoluções',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+      body: `
+        <p class="mb-5">Sua satisfação é prioridade. Você tem até <strong class="text-cyan-400">30 dias</strong> após o recebimento para trocar ou devolver qualquer produto.</p>
+        <div class="bg-gradient-to-br from-cyan-400/10 to-blue-600/5 border border-cyan-400/20 rounded-xl p-5 mb-5">
+          <h4 class="text-white font-semibold mb-2">✨ Como funciona</h4>
+          <ol class="space-y-2 text-sm">
+            <li class="flex gap-3"><span class="text-cyan-400 font-bold">1.</span> <span>Solicite a troca/devolução na sua conta em "Meus Pedidos".</span></li>
+            <li class="flex gap-3"><span class="text-cyan-400 font-bold">2.</span> <span>Receba a etiqueta de postagem gratuita por e-mail.</span></li>
+            <li class="flex gap-3"><span class="text-cyan-400 font-bold">3.</span> <span>Envie o produto na embalagem original com todos os acessórios.</span></li>
+            <li class="flex gap-3"><span class="text-cyan-400 font-bold">4.</span> <span>Após análise (até 5 dias úteis), receba o reembolso ou novo produto.</span></li>
+          </ol>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Condições para devolução</h4>
+        <ul class="space-y-2 mb-5 text-sm">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Produto sem sinais de uso</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Embalagem original intacta</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Todos os acessórios e manuais inclusos</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Nota fiscal original</li>
+        </ul>
+        <h4 class="text-white font-semibold mb-3">Prazos de reembolso</h4>
+        <div class="overflow-hidden rounded-xl border border-slate-800">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-950/50 text-slate-400 text-xs">
+              <tr><th class="text-left px-4 py-2 font-semibold">Forma de pagamento</th><th class="text-left px-4 py-2 font-semibold">Prazo</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              <tr><td class="px-4 py-3 text-white">Cartão de crédito</td><td class="px-4 py-3">Até 2 faturas</td></tr>
+              <tr><td class="px-4 py-3 text-white">PIX</td><td class="px-4 py-3">Até 5 dias úteis</td></tr>
+              <tr><td class="px-4 py-3 text-white">Boleto</td><td class="px-4 py-3">Até 10 dias úteis</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `
+    },
+    prazo: {
+      title: 'Prazo de Entrega',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+      body: `
+        <p class="mb-5">O prazo de entrega varia de acordo com seu CEP e a forma de envio escolhida. Consulte diretamente na página do produto.</p>
+        <h4 class="text-white font-semibold mb-3">Modalidades de envio</h4>
+        <div class="space-y-3 mb-5">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-cyan-400/10 border border-cyan-400/30 flex items-center justify-center text-cyan-400 shrink-0">⚡</div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1">
+                <h5 class="text-white font-semibold">Express</h5>
+                <span class="text-cyan-400 font-bold text-sm">1-2 dias úteis</span>
+              </div>
+              <p class="text-xs text-slate-400">Disponível para capitais e regiões metropolitanas. Entregas até 22h.</p>
+            </div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 shrink-0">🚚</div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1">
+                <h5 class="text-white font-semibold">Padrão</h5>
+                <span class="text-cyan-400 font-bold text-sm">3-7 dias úteis</span>
+              </div>
+              <p class="text-xs text-slate-400">Todo o Brasil. Frete grátis acima de R$ 299.</p>
+            </div>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 shrink-0">📦</div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-1">
+                <h5 class="text-white font-semibold">Econômico</h5>
+                <span class="text-cyan-400 font-bold text-sm">8-15 dias úteis</span>
+              </div>
+              <p class="text-xs text-slate-400">Para regiões mais distantes. Menor custo de frete.</p>
+            </div>
+          </div>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Simule o frete</h4>
+        <div class="flex gap-2">
+          <input type="text" placeholder="Digite seu CEP" maxlength="9" class="flex-1 bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-400/50 input-glow"/>
+          <button class="bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm transition-all">Calcular</button>
+        </div>
+        <p class="text-xs text-slate-500 mt-3">* Prazos podem variar em períodos promocionais e feriados.</p>
+      `
+    },
+    pagamento: {
+      title: 'Formas de Pagamento',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+      body: `
+        <p class="mb-5">Oferecemos diversas formas de pagamento para sua comodidade, todas com total segurança:</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">💳</span>
+              <h4 class="text-white font-semibold text-sm">Cartão de Crédito</h4>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">Até <strong class="text-cyan-400">12x sem juros</strong>. Aceitamos Visa, Master, Elo, Amex, Hipercard.</p>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">⚡</span>
+              <h4 class="text-white font-semibold text-sm">PIX</h4>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">Aprovação imediata + <strong class="text-cyan-400">5% de desconto</strong> extra.</p>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">📄</span>
+              <h4 class="text-white font-semibold text-sm">Boleto Bancário</h4>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">Vencimento em 3 dias úteis. Aprovação em até 2 dias.</p>
+          </div>
+          <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">🏦</span>
+              <h4 class="text-white font-semibold text-sm">Transferência</h4>
+            </div>
+            <p class="text-xs text-slate-400 mb-2">TED/DOC para contas selecionadas. <strong class="text-cyan-400">5% de desconto</strong>.</p>
+          </div>
+        </div>
+        <h4 class="text-white font-semibold mb-3">Segurança</h4>
+        <ul class="space-y-2 text-sm">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">🔒</span> Criptografia SSL 256 bits em todas as transações</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">🛡️</span> Certificação PCI DSS Level 1</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Antifraude com análise em tempo real</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">🔐</span> Dados do cartão nunca são armazenados</li>
+        </ul>
+      `
+    },
+    privacidade: {
+      title: 'Política de Privacidade',
+      icon: '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      body: `
+        <p class="mb-4 text-xs text-slate-500">Última atualização: 15 de janeiro de 2025</p>
+        <p class="mb-4">A Nexus está comprometida com a proteção dos seus dados pessoais, em conformidade com a <strong class="text-white">LGPD (Lei 13.709/2018)</strong>. Esta política explica como coletamos, usamos e protegemos suas informações.</p>
+        <h4 class="text-white font-semibold mb-2 mt-5">1. Dados que coletamos</h4>
+        <ul class="space-y-1 mb-4">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Dados cadastrais (nome, CPF, e-mail, endereço)</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Dados de pagamento (processados por gateway seguro)</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Dados de navegação (cookies, IP, dispositivo)</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Histórico de compras e preferências</li>
+        </ul>
+        <h4 class="text-white font-semibold mb-2 mt-5">2. Como usamos seus dados</h4>
+        <ul class="space-y-1 mb-4">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Processar e entregar seus pedidos</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Enviar comunicações relevantes (com opção de cancelamento)</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Melhorar sua experiência de navegação</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">▸</span> Cumprir obrigações legais</li>
+        </ul>
+        <h4 class="text-white font-semibold mb-2 mt-5">3. Seus direitos</h4>
+        <p class="mb-4">Você pode a qualquer momento:</p>
+        <ul class="space-y-1 mb-4">
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Acessar seus dados pessoais</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Solicitar correção ou exclusão</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Revogar consentimentos</li>
+          <li class="flex items-start gap-2"><span class="text-cyan-400 mt-0.5">✓</span> Solicitar portabilidade</li>
+        </ul>
+        <h4 class="text-white font-semibold mb-2 mt-5">4. Contato do DPO</h4>
+        <div class="bg-slate-950/50 border border-slate-800 rounded-xl p-4">
+          <p class="text-sm"><strong class="text-white">Encarregado de Dados (DPO)</strong></p>
+          <p class="text-sm text-slate-400">privacidade@nexus.com.br</p>
+          <p class="text-sm text-slate-400">(11) 4000-5678</p>
+        </div>
+      `
+    }
+  };
+
+  // ====== RENDERIZAR PRODUTOS ======
+  const grid = document.getElementById('productsGrid');
+  function renderStars(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.5;
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+      if (i < full) html += '<svg class="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+      else if (i === full && half) html += '<svg class="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24"><defs><linearGradient id="half"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#334155"/></linearGradient></defs><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="url(#half)"/></svg>';
+      else html += '<svg class="w-3.5 h-3.5 text-slate-700" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    }
+    return html;
+  }
+  function formatBRL(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+  grid.innerHTML = products.map(p => `
+    <article class="card-glow group relative bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 animate-slide-up">
+      <span class="absolute top-3 left-3 z-10 px-2 py-1 bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-[10px] font-bold tracking-wider uppercase rounded">${p.tag}</span>
+      <button class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-slate-950/70 backdrop-blur border border-slate-800 text-slate-400 hover:text-cyan-400 hover:border-cyan-400 flex items-center justify-center transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <div class="relative aspect-square bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden">
+        <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400x400/0f172a/22d3ee?text=Produto'"/>
+      </div>
+      <div class="p-4">
+        <h3 class="text-sm font-semibold text-white mb-1 line-clamp-1 group-hover:text-cyan-400 transition-colors">${p.title}</h3>
+        <div class="flex items-center gap-1 mb-3">
+          ${renderStars(p.rating)}
+          <span class="text-xs text-slate-500 ml-1">(${p.reviews})</span>
+        </div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <span class="text-lg font-bold text-white">${formatBRL(p.price)}</span>
+          ${p.oldPrice ? `<span class="text-xs text-slate-500 line-through">${formatBRL(p.oldPrice)}</span>` : ''}
+        </div>
+        <button onclick="addToCart(${p.id})" class="add-btn w-full bg-slate-800 hover:bg-cyan-400 hover:text-slate-950 border border-slate-700 hover:border-cyan-400 text-slate-200 font-semibold py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-neon-sm">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span>Adicionar ao Carrinho</span>
+        </button>
+      </div>
+    </article>
+  `).join('');
+
+  // ====== CARRINHO ======
+  let cart = [];
+  const cartCount = document.getElementById('cartCount');
+  function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    cart.push(product);
+    cartCount.textContent = cart.length;
+    cartCount.classList.add('animate-pulse');
+    setTimeout(() => cartCount.classList.remove('animate-pulse'), 500);
+    showToast(`${product.title} adicionado ao carrinho`, 'success');
+  }
+
+  // ====== TOAST ======
+  const toastContainer = document.getElementById('toastContainer');
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-enter pointer-events-auto flex items-center gap-3 bg-slate-900 border border-cyan-400/30 rounded-xl px-4 py-3 shadow-2xl min-w-[280px] max-w-sm`;
+    toast.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-cyan-400/10 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <p class="text-sm text-slate-200 flex-1">${message}</p>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      setTimeout(() => toast.remove(), 300);
+    }, 2800);
+  }
+
+  // ====== CAROUSEL ======
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  let currentSlide = 0;
+  let autoSlide;
+  function goToSlide(index) {
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'inactive');
+      s.classList.add(i === index ? 'active' : 'inactive');
+    });
+    dots.forEach((d, i) => {
+      d.classList.toggle('bg-cyan-400', i === index);
+      d.classList.toggle('bg-slate-700', i !== index);
+    });
+    currentSlide = index;
+  }
+  function nextSlide() { goToSlide((currentSlide + 1) % slides.length); }
+  function prevSlide() { goToSlide((currentSlide - 1 + slides.length) % slides.length); }
+  function startAuto() { autoSlide = setInterval(nextSlide, 6000); }
+  function resetAuto() { clearInterval(autoSlide); startAuto(); }
+  document.getElementById('nextSlide').addEventListener('click', () => { nextSlide(); resetAuto(); });
+  document.getElementById('prevSlide').addEventListener('click', () => { prevSlide(); resetAuto(); });
+  dots.forEach(dot => dot.addEventListener('click', (e) => { goToSlide(parseInt(e.target.dataset.slide)); resetAuto(); }));
+  startAuto();
+
+  // ====== MENU DROPDOWN ======
+  const menuBtn = document.getElementById('menuBtn');
+  const menuPanel = document.getElementById('menuPanel');
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuPanel.classList.toggle('hidden'); });
+  document.addEventListener('click', (e) => {
+    if (!menuPanel.contains(e.target) && !menuBtn.contains(e.target)) menuPanel.classList.add('hidden');
+  });
+
+  // ====== CART BUTTON ======
+  document.getElementById('cartBtn').addEventListener('click', () => {
+    showToast(cart.length === 0 ? 'Seu carrinho está vazio' : `Você tem ${cart.length} item(s) no carrinho`, 'info');
+  });
+
+  // ====== NEWSLETTER ======
+  document.getElementById('newsletterForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = e.target.querySelector('input').value;
+    showToast(`Inscrito com sucesso: ${email}`, 'success');
+    e.target.reset();
+  });
+
+  // ====== HEADER SHADOW ======
+  const header = document.getElementById('header');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 10) header.classList.add('shadow-2xl');
+    else header.classList.remove('shadow-2xl');
+  });
+
+  // ====== MODAL SYSTEM ======
+  const modal = document.getElementById('pageModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalIcon = document.getElementById('modalIcon');
+  const modalBody = document.getElementById('modalBody');
+  const modalClose = document.getElementById('modalClose');
+
+  function openModal(pageKey) {
+    const page = pages[pageKey];
+    if (!page) return;
+    modalTitle.textContent = page.title;
+    modalIcon.innerHTML = page.icon;
+    modalBody.innerHTML = page.body;
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+  }
+
+  // Links do footer
+  document.querySelectorAll('.page-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const pageKey = link.dataset.page;
+      openModal(pageKey);
+    });
+  });
+
+  // Fechar modal
+  modalClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+</script>
+
+</body>
+</html>
